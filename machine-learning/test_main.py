@@ -1059,6 +1059,36 @@ class TestOcr:
             OcrOptions(session=ort_session.return_value, rec_batch_num=6, rec_img_shape=(3, 48, 320))
         )
 
+    def test_rec_default_language_is_ch(self, path: mock.Mock) -> None:
+        path.return_value.__truediv__.return_value.__truediv__.return_value.suffix = ".onnx"
+        from rapidocr.utils.typings import LangRec
+
+        text_recognizer = TextRecognizer("PP-OCRv5_mobile", cache_dir="test_cache")
+
+        assert text_recognizer.language == LangRec.CH
+
+    def test_rec_arabic_language_from_model_name(self, path: mock.Mock) -> None:
+        path.return_value.__truediv__.return_value.__truediv__.return_value.suffix = ".onnx"
+        from rapidocr.utils.typings import LangRec
+
+        text_recognizer = TextRecognizer("ARABIC__PP-OCRv5_mobile", cache_dir="test_cache")
+
+        assert text_recognizer.language == LangRec.ARABIC
+
+    def test_rec_arabic_lang_type_passed_to_ocr_options(
+        self, ort_session: mock.Mock, path: mock.Mock, mocker: MockerFixture
+    ) -> None:
+        path.return_value.__truediv__.return_value.__truediv__.return_value.suffix = ".onnx"
+        mocker.patch("immich_ml.models.base.InferenceModel.download")
+        rapid_recognizer = mocker.patch("immich_ml.models.ocr.recognition.RapidTextRecognizer")
+        from rapidocr.utils.typings import LangRec
+
+        text_recognizer = TextRecognizer("ARABIC__PP-OCRv5_mobile", cache_dir="test_cache")
+        text_recognizer.load()
+
+        call_kwargs = rapid_recognizer.call_args[0][0]
+        assert call_kwargs.lang_type == LangRec.ARABIC
+
 
 @pytest.mark.asyncio
 class TestCache:
